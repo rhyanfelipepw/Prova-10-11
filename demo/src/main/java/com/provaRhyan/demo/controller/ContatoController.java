@@ -3,56 +3,61 @@ package com.provaRhyan.demo.controller;
 
 import com.provaRhyan.demo.models.Contato;
 import com.provaRhyan.demo.repositories.RepositoryContato;
+import com.provaRhyan.demo.service.contatoService;
 import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
+@CrossOrigin(
+        origins = {"*"},
+        maxAge = 3600,
+        allowCredentials = "false")
 @RestController
 @RequestMapping({"/contato"})
 public class ContatoController {
-
     @Autowired
-    private RepositoryContato repository;
+    private contatoService service;
 
     @PostMapping(path = "/criarContato")
     public String criaUsuario(@RequestBody Contato contato) {
-        if (repository.findByEmail(contato.getEmail()).isPresent())
-            return "O numero informado já está em uso";
-        if (repository.findByTelefone(contato.getNrTelefone()).isPresent())
-            return "O email informado já está em uso";
-
         try {
-            repository.save(contato);
-            return "Sucess";
+            String response = service.criaContato(contato);
+            return response;
         } catch (Exception e) {
             return e.toString();
-
         }
-
-
     }
 
     @GetMapping(path = "/getContatos")
     public List<Contato> getAllContatos() {
-        return repository.findAll();
+        return service.buscarContatos();
     }
 
     @GetMapping(path = "/getContato")
-    public Contato getContadoById(@RequestParam long idUsuario) {
-        return repository.getById(idUsuario);
+    public Optional<Contato> getContadoById(@RequestParam long idUsuario) {
+        return service.buscaContatoPorId(idUsuario);
     }
 
     @PutMapping(path = "/editContato")
-    public Contato editContato(@RequestBody Contato contato) {
-        return repository.save(contato);
+    public ResponseEntity<String> editContato(@RequestBody Contato contato) {
+        try{
+            service.editarContato(contato);
+              return  new ResponseEntity("",HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity(e, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @DeleteMapping(path = "/deleteContato")
     public String deleteContato(@RequestBody Contato contato) {
         try {
-            repository.delete(contato);
+            service.deletaContato(contato);
             return "Ok";
         } catch (Exception e) {
             return e.toString();
